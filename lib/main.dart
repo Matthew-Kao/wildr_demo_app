@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:camera/camera.dart';
+import 'dart:async';
+import 'dart:math';
 
 void main() => runApp(MyApp());
 
@@ -10,7 +11,6 @@ class MyApp extends StatelessWidget {
       title: 'Create a Post App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(),
     );
@@ -24,49 +24,128 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
-  final List<Widget> _children = [
-    CameraTab(),
-    PhotosTab(),
-  ];
+  List<String> selectedImages = [];
+  bool isCompressing = false;
+  bool isUploading = false;
 
-  void onTabTapped(int index) {
+  void onSelectImage(String imageName) async {
+    if (selectedImages.length >= 5) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Maximum of 5 images can be selected')),
+      );
+      return;
+    }
+
     setState(() {
-      _currentIndex = index;
+      selectedImages.add(imageName);
     });
+
+    simulateCompression(imageName);
+  }
+
+  Future<void> simulateCompression(String imageName) async {
+    setState(() {
+      isCompressing = true;
+    });
+
+    await Future.delayed(Duration(seconds: Random().nextInt(2) + 3));
+
+    int savedSize = Random().nextInt(500);
+
+    setState(() {
+      isCompressing = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text('Image compressed and saved $savedSize Kb in size.')),
+    );
+  }
+
+  Future<void> simulateUpload() async {
+    if (selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No images selected for upload')),
+      );
+      return;
+    }
+
+    setState(() {
+      isUploading = true;
+    });
+
+    await Future.delayed(Duration(seconds: Random().nextInt(4) + 4));
+
+    setState(() {
+      selectedImages.clear();
+      isUploading = false;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Images uploaded successfully!')),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          _children[_currentIndex],
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(4.0),
-              ),
-              child: Text(
-                'Status Area - Show selected media here',
-                style: TextStyle(color: Colors.white),
+      body: SafeArea(
+        child: Column(
+          children: <Widget>[
+            Container(
+              color: Colors.blueGrey[50],
+              height: 100,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: selectedImages.length,
+                      itemBuilder: (context, index) => Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Image.asset(
+                            'assets/images/${selectedImages[index]}',
+                            width: 100),
+                      ),
+                    ),
+                  ),
+                  if (!isCompressing && !isUploading)
+                    IconButton(
+                      icon: Icon(Icons.upload, color: Colors.red),
+                      onPressed: simulateUpload,
+                    ),
+                  if (isCompressing || isUploading)
+                    Padding(
+                      padding: EdgeInsets.only(right: 20.0),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                      ),
+                    ),
+                ],
               ),
             ),
-          ),
-        ],
+            Expanded(
+              child: _currentIndex == 0
+                  ? CameraTab()
+                  : PhotosTab(onSelectImage: onSelectImage),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        onTap: onTabTapped,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
         currentIndex: _currentIndex,
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.camera),
+            icon: Icon(Icons.camera_alt),
             label: 'Camera',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.photo),
+            icon: Icon(Icons.photo_library),
             label: 'Photos',
           ),
         ],
@@ -75,68 +154,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class CameraTab extends StatefulWidget {
-  @override
-  _CameraTabState createState() => _CameraTabState();
-}
-
-class _CameraTabState extends State<CameraTab> {
-  CameraController? _controller;
-  List<CameraDescription>? _cameras;
-  bool _isReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _setupCameras();
-  }
-
-  Future<void> _setupCameras() async {
-    try {
-      _cameras = await availableCameras();
-
-      _controller = CameraController(_cameras![0], ResolutionPreset.medium);
-      await _controller!.initialize();
-    } on CameraException catch (e) {
-      print(e);
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _isReady = true;
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
+class CameraTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    if (!_isReady) {
-      return Center(child: CircularProgressIndicator());
-    }
-
-    return ClipRect(
-      child: OverflowBox(
-        alignment: Alignment.center,
-        child: FittedBox(
-          fit: BoxFit.fitWidth,
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.width /
-                _controller!.value.aspectRatio,
-            child: CameraPreview(_controller!),
-          ),
-        ),
-      ),
-    );
+    return Center(child: Text('Camera Tab Content'));
   }
 }
 
 class PhotosTab extends StatelessWidget {
+  final Function(String) onSelectImage;
+
+  PhotosTab({required this.onSelectImage});
+
   final List<String> _imageNames = [
     'cuteCatPic1.jpeg',
     'cuteCatPic2.jpeg',
@@ -160,34 +189,24 @@ class PhotosTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Container(
-        color: Colors.lightBlue[50],
-        child: GridView.builder(
-          padding:
-              EdgeInsets.only(top: 16.0, left: 10.0, right: 10.0, bottom: 10.0),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: (1 / 1),
-          ),
-          itemCount: _imageNames.length,
-          itemBuilder: (context, index) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: GestureDetector(
-                onTap: () {
-                  print('Selected image: ${_imageNames[index]}');
-                },
-                child: Image.asset(
-                  'assets/images/${_imageNames[index]}',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            );
-          },
+    return Container(
+      color: Colors.lightBlue[50],
+      child: GridView.builder(
+        padding: EdgeInsets.all(10),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1,
         ),
+        itemCount: _imageNames.length,
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () => onSelectImage(_imageNames[index]),
+            child: Image.asset('assets/images/${_imageNames[index]}',
+                fit: BoxFit.cover),
+          );
+        },
       ),
     );
   }

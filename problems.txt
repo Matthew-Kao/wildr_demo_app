@@ -1,0 +1,47 @@
+March 13
+- I don't know how to test the camera on IOS. From my web search, they told me to test it using a real device. 
+Will try to test in on a real (never done it before)
+- Figure out a way to show the status bar in both pages, not only on one page
+
+March 14
+- Should the app allow the user to click images while the compression is going on? The problem is that the compression messages would overlap
+
+March 15
+- Problem with the camera tab, the IOS emulator would not allow me to access cameras, it would only work on android
+
+March 16 
+- The app would allow user to select images while the compression is going on. However, since Flutter does not allow stacked SnackBars,
+I would have to show the compression messages one by one without overlapping, i.e use a queue, show one message, when it is done, show the other
+
+March 17
+- How should we display a video in the photos tab? Should we allow the user to preview the video? I believe the answer should be yes.
+Then the problem becomes how? How should the user be able to preview the video if a single tap of the video means compressing the video? 
+I will try to add a double tap functionality for videos in order allow the user to preview the video
+
+March 18
+- can the same image or picture be selected?
+
+March 19
+- Still having a problem with allowing the user to take a video, how do we show a frame of the video in the status bar?
+
+March 20
+- The user can now record a video. However, I need to figure out a way to allow the user to differentiate whether they have selected an image
+or video, they currently look the same.
+
+March 21
+- Should we distinguish in the status bar, whether a user have selected an image or video?
+
+March 22
+- Having problems with allowing a video icon to show up in the status bar, to indicate a video is selected instead of an image
+
+March 23
+- Finally found a solution to how we could make a video in the status load with a video icon in the middle
+
+March 24
+- Finished all the functionality, next up: Make the UI prettier
+
+March 25
+- Finished matching color schemes
+
+March 26
+- Final check before submission

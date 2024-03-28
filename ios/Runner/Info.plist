@@ -3,11 +3,16 @@
 <plist version="1.0">
 <dict>
 
+
+
 	<key>NSCameraUsageDescription</key>
 	<string>Used to demonstrate camera functionality</string>
 
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Used to capture audio for video recording</string>
+
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Need photo library access for saving pictures</string>
 
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
